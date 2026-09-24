@@ -1,0 +1,12 @@
+# colcon çıktıları (kökte ve paket içinde yanlışlıkla oluşanlar)
+build/
+install/
+log/
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+# yerel ölçüm/kayıt çıktıları
+*.db3
+*.mcap
+*.mp4

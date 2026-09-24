@@ -1,0 +1,77 @@
+# robot_localization EKF — enkoder + IMU füzyonu
+#
+# Robottaki ROS 1 kurulumu bunun karşılığı olan robot_pose_ekf'i kullanıyor
+# (limo_navigation_diff.launch, limo_gmapping.launch) ve limo_base'in kendi TF
+# yayınını kapatıyor: limo_start.launch içinde pub_odom_tf = false.
+#
+# Upstream limo_ros2'de bu düğüm hiç yok — limo_start.launch.py:30-42'de
+# robot_pose_ekf yorum satırına alınmış, sürücü TF'i doğrudan yayınlıyor ve
+# odometrinin yönü tamamen IMU yaw entegrasyonundan geliyor (0.1° ölü bantla).
+# EKF, o ölü bandın yerine konması gereken şey.
+
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    # LIMO düzlemde hareket eder: z, roll, pitch serbestlik derecelerini kilitler.
+    two_d_mode: true
+    transform_time_offset: 0.0
+    transform_timeout: 0.0
+    print_diagnostics: true
+    debug: false
+    publish_acceleration: false
+    # odom -> base_link dönüşümünü bu düğüm yayınlar.
+    # limo_base'i pub_odom_tf:=false ile başlatın, yoksa iki yayıncı çakışır.
+    publish_tf: true
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+
+    # --- Tekerlek odometrisi -------------------------------------------------
+    # Konum değil hız alınıyor: sürücünün ürettiği x/y konumu zaten IMU yaw'ıyla
+    # entegre edilmiş, tekrar füzyonlamak korelasyonlu hata verir.
+    # Sıra: x, y, z | roll, pitch, yaw | vx, vy, vz | vroll, vpitch, vyaw | ax, ay, az
+    odom0: odom
+    odom0_config: [false, false, false,
+                   false, false, false,
+                   true,  false, false,
+                   false, false, false,
+                   false, false, false]
+    odom0_queue_size: 10
+    odom0_nodelay: true
+    odom0_differential: false
+    odom0_relative: false
+
+    # --- IMU -----------------------------------------------------------------
+    # HI226. Yalnızca yaw hızı alınıyor; mutlak yaw manyetik sapmaya açık ve
+    # sürücü zaten onu entegre ediyor.
+    imu0: imu
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
+    imu0_nodelay: true
+    imu0_differential: false
+    imu0_relative: false
+    imu0_queue_size: 10
+    imu0_remove_gravitational_acceleration: true
+
+    # Süreç gürültüsü — varsayılanlar. Faz 1'de odometri sapması ölçülünce ayarlanır.
+    process_noise_covariance: [0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.05, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.03, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.06, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025, 0.0, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.025, 0.0, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.04, 0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.02, 0.0,  0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,  0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.01, 0.0,
+                               0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.015]

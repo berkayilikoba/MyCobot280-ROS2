@@ -1,0 +1,13 @@
+# Derleme çıktıları ve geçici dizinler
+build/
+install/
+log/
+**/build/
+**/install/
+**/log/
+.git
+bench/
+
+# Harita dosyaları dışlanmamalıdır (haritalar lazım)
+!*.pgm
+!**/*.pgm

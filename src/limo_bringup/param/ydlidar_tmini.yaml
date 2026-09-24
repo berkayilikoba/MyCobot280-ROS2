@@ -1,0 +1,44 @@
+# EAI T-mini Pro — ROS 2 parametreleri
+#
+# Robottaki gerçek LiDAR bu. Upstream limo_ros2/foxy'deki ydlidar.yaml YDLIDAR X2L
+# içindi (baudrate 115200, isSingleChannel true) ve bu cihazla çalışmaz.
+#
+# Değerler robottaki ROS1 sürücüsünden alındı:
+#   agilex_ws/src/ydlidar_ros_driver/launch/Tmini.launch
+# Upstream ydlidar_ros2_driver @ humble params/Tmini.yaml ile farklar işaretlendi.
+
+ydlidar_ros2_driver_node:
+  ros__parameters:
+    # [robot] udev symlink. Yoksa /dev/ttyUSB0 ile deneyin, kuralı sonra ekleriz.
+    port: /dev/ydlidar
+    # [robot] laser_link — upstream ROS2 "laser_frame" diyor, URDF ve ROS1 TF'i
+    # laser_link kullanıyor. İsim uyuşmazsa costmap /scan'i dönüştüremez.
+    frame_id: laser_link
+
+    baudrate: 230400          # X2L 115200 idi
+    lidar_type: 1
+    device_type: 0
+    isSingleChannel: false    # X2L true idi
+    intensity: true
+    intensity_bit: 8
+    sample_rate: 4
+    abnormal_check_count: 4
+
+    # [robot] Robotun arkası maskelenmiş: yalnızca ±100° tarama kullanılıyor.
+    # Upstream ±180 yazıyor. Geniş bırakılırsa gövde/direk sürekli engel olarak
+    # işaretlenir ve AMCL'in ışın modeli bozulur.
+    angle_min: -100.0
+    angle_max: 100.0
+
+    range_min: 0.02
+    range_max: 16.0           # upstream Tmini.yaml 12.0 yazıyor; ROS1 launch 16.0
+    frequency: 6.0            # ROS1 launch değeri
+
+    # [robot] ROS1'de reversion=false. Upstream true — ters verilirse harita aynalanır.
+    reversion: false
+    inverted: true
+    resolution_fixed: true
+    auto_reconnect: true
+    support_motor_dtr: false
+    invalid_range_is_inf: false
+    debug: false

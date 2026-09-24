@@ -1,0 +1,62 @@
+<!--
+  LIMO Ackermann — navigate_to_pose davranış ağacı (kararlı yeniden planlama, yerel costmap temizlenmez).
+
+  Humble'ın navigate_to_pose_w_replanning_and_recovery.xml dosyasından türetildi.
+  Tek fark kurtarma bölümünde: <Spin spin_dist="1.57"/> çıkarıldı.
+
+  Neden: LIMO Ackermann modunda yerinde dönemez (minimum dönüş yarıçapı 0.4 m).
+  Spin davranışı bu kinematikte aracı sıkıştırır. behavior_server'da da "spin"
+  eklentisi yüklenmiyor; varsayılan ağaç kullanılsaydı bt_navigator
+  "Action server spin not available" verip yığını hiç ayağa kaldırmazdı.
+
+  Yerine konan kurtarmalar, araç kinematiğiyle uyumlu olanlar:
+    ClearingActions  → costmap'leri temizle
+    BackUp           → geri git (Ackermann geri gidebilir)
+    DriveOnHeading   → mevcut yönde kısa mesafe ilerle
+    Wait             → bekle (dinamik engelin geçmesi için)
+-->
+<root main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <!-- Yalnızca gerektiğinde yeniden planla: hedef değişti, yol geçersizleşti
+                 ya da yol 15 s'den eski. Her saniye yeniden planlamak Hybrid-A*'ın
+                 ileri/geri (cusp) yapısını değiştirip aracı salındırıyordu. -->
+            <Fallback>
+              <ReactiveSequence>
+                <Inverter>
+                  <PathExpiringTimer seconds="15" path="{path}"/>
+                </Inverter>
+                <Inverter>
+                  <GlobalUpdatedGoal/>
+                </Inverter>
+                <IsPathValid path="{path}"/>
+              </ReactiveSequence>
+              <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+            </Fallback>
+            <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="FollowPath"/>
+          <!-- Yerel costmap TEMİZLENMEZ: lidar yalnız önü görüyor (robotta ±100°, simde ±120°);
+               arkadaki engeller yalnızca costmap belleğinde. Temizlenirse geri manevra kör kalır. -->
+          <Wait wait_duration="1"/>
+        </RecoveryNode>
+      </PipelineSequence>
+      <ReactiveFallback name="RecoveryFallback">
+        <GoalUpdated/>
+        <RoundRobin name="RecoveryActions">
+          <Sequence name="ClearingActions">
+            <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+          </Sequence>
+          <BackUp backup_dist="0.30" backup_speed="0.05"/>
+          <Wait wait_duration="5"/>
+          <DriveOnHeading dist_to_travel="0.20" speed="0.05"/>
+        </RoundRobin>
+      </ReactiveFallback>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>

@@ -1,0 +1,29 @@
+# Ackermann (araba benzeri) devriye: bölmenin etrafında saat yönünün tersine döngü.
+# Her waypoint'in yönelimi gidiş yönüne teğet -> yerinde dönüş / üç noktalı manevra gerekmez.
+# (sim_patrol.yaml'daki gibi keyfi yönelimler Ackermann'da dar alan manevrası ister;
+#  lidar arkayı görmediği için geri manevra güvenilmez — bkz. SABAH_RAPORU.)
+home:
+  x: 0.0
+  y: 0.0
+  yaw: 0.0
+loop: true
+max_laps: 2
+max_retries: 1
+max_consecutive_failures: 2
+waypoints:
+  - name: dogu_gecit      # bölmenin doğu ucu, kuzeye dönük: (0,0)'dan doğuya gidip doğal sol dönüşün bittiği yer
+    x: 3.0
+    y: 0.8
+    yaw: 90.0
+  - name: kuzey_bati_yon  # bölmenin üstü, batıya dönük
+    x: 0.0
+    y: 2.5
+    yaw: 180.0
+  - name: bati_gecit      # bölmenin batı ucu, güneye dönük
+    x: -3.0
+    y: 0.6
+    yaw: -90.0
+  - name: guney_dogu_yon  # başlangıç hattı, doğuya dönük; ev (0,0,0) 1.5 m düz ileride
+    x: -1.5
+    y: 0.0
+    yaw: 0.0

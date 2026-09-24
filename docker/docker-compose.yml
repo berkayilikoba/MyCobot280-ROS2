@@ -1,0 +1,50 @@
+# LIMO Robotu Jetson Docker Compose Yapılandırması
+x-common: &common
+  image: limo:humble-jetson
+  runtime: nvidia
+  network_mode: host
+  ipc: host
+  restart: unless-stopped
+  environment:
+    - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+  volumes:
+    - ./maps:/maps
+    - ./missions:/missions
+
+services:
+  # Robot tabanı, LiDAR ve sensör sürücüleri
+  limo_base:
+    <<: *common
+    devices:
+      - /dev/ttyTHS0:/dev/ttyTHS0
+      - /dev/ydlidar:/dev/ydlidar
+    command: ros2 launch limo_bringup limo_start.launch.py
+
+  # Nav2 navigasyon yığını
+  nav2:
+    <<: *common
+    profiles:
+      - nav
+    command: ros2 launch limo_bringup limo_nav2.launch.py mode:=${LIMO_MODE:-ackermann} map:=/maps/${LIMO_MAP:-map.yaml}
+
+  # slam_toolbox SLAM haritalama
+  slam:
+    <<: *common
+    profiles:
+      - slam
+    command: bash -c "ros2 launch slam_toolbox online_async_launch.py slam_params_file:=$$(ros2 pkg prefix --share limo_bringup)/param/slam_toolbox_limo.yaml"
+
+  # SLAM ile navigasyon: map->odom'u slam_toolbox verir, AMCL/map_server kapalı
+  nav2_slam:
+    <<: *common
+    profiles:
+      - slam
+    command: ros2 launch limo_bringup limo_nav2.launch.py mode:=${LIMO_MODE:-ackermann} use_localization:=false
+
+  # Otonom devriye
+  patrol:
+    <<: *common
+    profiles:
+      - patrol
+    command: ros2 launch limo_autonomy patrol.launch.py mission_file:=/missions/${LIMO_MISSION:-patrol.yaml} set_initial_pose:=false

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>limo_autonomy</name>
+  <version>0.1.0</version>
+  <description>LIMO otonom görev katmanı: Nav2 üzerinde waypoint devriyesi, yeniden deneme, eve dönüş.</description>
+  <maintainer email="gunes@todo.todo">gunes</maintainer>
+  <license>MIT</license>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
+  <exec_depend>limo_msgs</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <test_depend>python3-pytest</test_depend>
+  <export><build_type>ament_python</build_type></export>
+</package>

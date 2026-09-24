@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<robot name="limo_mycobot" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <xacro:arg name="mode" default="diff" />
+
+    <xacro:if value="${'$(arg mode)' == 'ackermann'}">
+        <xacro:include filename="$(find limo_car)/gazebo/ackermann_with_sensor.xacro" />
+    </xacro:if>
+    <xacro:unless value="${'$(arg mode)' == 'ackermann'}">
+        <xacro:include filename="$(find limo_description)/urdf/limo_four_diff.xacro" />
+    </xacro:unless>
+
+    <xacro:include filename="$(find mycobot_description)/urdf/mycobot/mycobot.urdf.xacro" />
+
+    <joint name="limo_mycobot" type="fixed">
+        <parent link="base_link" />
+        <child link="joint1" />
+        <origin xyz="-0.01 0.0 0.0" rpy="0 0 0" />
+    </joint>
+
+</robot>
