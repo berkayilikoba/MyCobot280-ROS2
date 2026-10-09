@@ -109,6 +109,10 @@ koyun, PC'ye aldıktan sonra robottan silin.
   Konumu bozmaz (entegrasyon damga aralığıyla), ama yüksek hızda poz ara değerlemesi gerekir.
 - Derinlik renk görüntüsüne hizalı değil (640×400 vs 640×480); `camera_info` + `depth_to_color` kayıtta.
 - Kamera yaw'ı ve derinlik sensörünün yanal ofseti ölçülmedi (derinlik dilimi ↔ lidar eşleştirmesiyle ölçülebilir).
+- **Lidar TF'i yanlış:** robottaki fabrika `open_ydlidar_launch.py` `base_link -> laser_frame` = (0, 0, 0.02), yaw 0
+  yayınlıyor; kayıtlardan ölçülen (yerinde dönüş + düz gidiş ICP) (0.137, 0.015) m, **yaw −9.66°**. AMCL'nin dönüşte
+  sıçraması ve kayması büyük olasılıkla bundan. Düzeltme (yapılacak): `scan_sabitle.py` çıktısını kendi çerçevesine
+  (`laser_duz`) yayınlayıp doğru statik TF vermek, haritayı yeniden çıkarmak.
 - Dönüşlerde 4 teker kaydığı için odom yer değiştirmesinde ~1–8 cm/dönüş hata var (yön hatası ≤1°).
 - AMCL bu odada güvenilir değil (tarama–harita örtüşmesi ~0.5); kare pozları için kayıttan sonra lidar eşleştirmesi önerilir.
 - 09.10'daki ilk kamerali deneme (`~/gunes_kayit/dikdortgen_kamera_*`, tek kayıt süreci) bozuk: lidar 0, odom 35 Hz.
@@ -122,5 +126,7 @@ koyun, PC'ye aldıktan sonra robottan silin.
 | `scan_cek.py` + `icp_ardisik.py` | ardışık lidar taramalarını ICP ile eşleyip odom yönü/mesafesini doğrular (dönüş hızına göre) |
 | `icp_karsilastir.py` | durağan anlar arası ICP ile odom karşılaştırması |
 | `zemin_egimi.py <kamera_bag> <sensor_bag>` | kameranın zeminden yüksekliği ve roll/pitch'i (dış kalibrasyon) |
+| `bag2vlmaps.py <kamera_bag> <sensor_bag> <çıktı>` | kaydı VLMaps sahnesine çevirir: bozulması giderilmiş RGB, renge hizalı metre derinlik (.npy), kare pozları (gövde + kamera), VLMaps ayarı |
+| `vlmaps_dogrula.py <sahne> <sensor_bag>` | sahne doğruluğu: derinlik–renk hizası, zemin yüksekliği, kamera–lidar örtüşmesi, başlangıca dönüş hatası |
 
 Kullanım örnekleri ve 24.09 / 08.10 sonuçları: `docs/odom_analizi.md`.
