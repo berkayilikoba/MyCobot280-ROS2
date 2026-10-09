@@ -27,10 +27,11 @@ kapat() {  # kapat <pkill deseni> [düğüm deseni]
   return 0
 }
 
-# base_link -> camera_link (Orbbec sürücüsünün kök çerçevesi). Resmi AgileX URDF: (0.084, 0, 0.03) m, eğimsiz;
-# base_link yerden 0.15 m. Sürücü camera_link -> depth/color/optical zincirini kendisi yayınlar; bu halka eksikti.
-# Değerler: config/kamera_kalibrasyon.yaml. nav_baslat.sh / harita_baslat.sh çağırır; robottaki kayıt /tf_static'e alır.
+# base_link -> camera_link (Orbbec sürücüsünün kök çerçevesi; sürücü camera_link -> depth/color/optical zincirini
+# kendisi yayınlar, bu halka eksikti). x, y: resmi AgileX URDF; z, roll, pitch: zemin düzleminden ölçüldü
+# (analiz/zemin_egimi.py, 09.10). Değerler ve kaynakları: config/kamera_kalibrasyon.yaml.
+# nav_baslat.sh / harita_baslat.sh çağırır; robottaki kayıt /tf_static'e alır.
 kamera_tf_yayinla() {  # kamera_tf_yayinla <log dosyası>
-  ros2 run tf2_ros static_transform_publisher --x 0.084 --y 0 --z 0.03 --roll 0 --pitch 0 --yaw 0 \
+  ros2 run tf2_ros static_transform_publisher --x 0.084 --y 0 --z 0.028 --roll 0.0075 --pitch -0.0248 --yaw 0 \
     --frame-id base_link --child-frame-id camera_link > "$1" 2>&1 &
 }

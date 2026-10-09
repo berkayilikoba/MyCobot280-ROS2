@@ -89,18 +89,38 @@ Kayıt (robotta `~/limo_kayit/<ad>_<zaman>/`), iki ayrı bag — sonradan zaman 
 | `kamera` | `/camera/color/image_raw` (640×480 rgb8) `/camera/depth/image_raw` (640×400 16UC1) | ~20 Hz (kamera 30 Hz yayınlıyor, kayıt ~1/3 düşürüyor) |
 
 Kamerali kayıt ~27 MB/s (~1.6 GB/dk); robotta ~17 GB boş. `kayit_baslat.sh` 5 GB altında başlamaz.
+Kaydı PC'ye almak: `kayit_bitir.sh --indir` (→ `~/limo_veri/robot_kayit/`). Bag'ler depoya girmez; ortak sürücüye
+koyun, PC'ye aldıktan sonra robottan silin.
+
+## 4. Kamera dış kalibrasyonu
+
+`config/kamera_kalibrasyon.yaml` — `base_link -> camera_link` = (0.084, 0, 0.028) m, roll +0.43°, pitch −1.42°.
+
+- x, y: resmi AgileX URDF. z, roll, pitch: derinlik görüntüsündeki zemin düzleminden ölçüldü
+  (`analiz/zemin_egimi.py`, 38 kare, düzlem RMS 3 mm): kamera yerden 17.8 cm, ~1.4° yukarı bakıyor. Yaw ölçülmedi.
+- `nav_baslat.sh` / `harita_baslat.sh` bu dönüşümü statik TF olarak yayınlar; robottaki kayıt `/tf_static`'e alır.
+- **09.10 kayıtlarında bu halka yok** — işlerken yaml'daki değerle statik ekleyin (komut yaml'da).
+- Kare pozu: `T_map_optik(t) = T_map_base(t) · T_base_camlink · T_camlink_optik` (son halka sürücünün `/tf_static`'inde).
 
 ## Bilinen sorunlar / yapılacaklar
 
 - Kamera görüntüleri kayıtta ~20 Hz: sıkıştırılmış konu ya da DDS soket tamponu (sudo, robot sorumlusu onayı) gerekli.
+- Kamera açıkken `/odom_duz`'da kısa boşluklar var (09.10: 84 s'de 15 kez >0.2 s, en uzun 0.33 s; kamerasız turda 0).
+  Konumu bozmaz (entegrasyon damga aralığıyla), ama yüksek hızda poz ara değerlemesi gerekir.
 - Derinlik renk görüntüsüne hizalı değil (640×400 vs 640×480); `camera_info` + `depth_to_color` kayıtta.
-- Kamera dış kalibrasyonu: `config/kamera_kalibrasyon.yaml` (resmi AgileX URDF, `base_link -> camera_link` = (0.084, 0, 0.03) m,
-  eğimsiz; sahada doğrulandı). 09.10 kayıtlarında bu halka TF'te yok, işlerken statik ekleyin; sonraki kayıtlarda
-  `nav_baslat.sh`/`harita_baslat.sh` yayınlıyor.
+- Kamera yaw'ı ve derinlik sensörünün yanal ofseti ölçülmedi (derinlik dilimi ↔ lidar eşleştirmesiyle ölçülebilir).
 - Dönüşlerde 4 teker kaydığı için odom yer değiştirmesinde ~1–8 cm/dönüş hata var (yön hatası ≤1°).
 - AMCL bu odada güvenilir değil (tarama–harita örtüşmesi ~0.5); kare pozları için kayıttan sonra lidar eşleştirmesi önerilir.
+- 09.10'daki ilk kamerali deneme (`~/gunes_kayit/dikdortgen_kamera_*`, tek kayıt süreci) bozuk: lidar 0, odom 35 Hz.
+  Doğru kayıt: `~/gunes_kayit/kamera_tur_20261009_122158/{sensor,kamera}`.
 
 ## Analiz betikleri (`analiz/`)
 
-`odom_saglik.py` (odom/IMU hız, gecikme, boşluk), `scan_cek.py` + `icp_ardisik.py` (ardışık tarama ICP ile odom
-yön/mesafe doğrulaması). Kullanım örnekleri `docs/odom_analizi.md` içinde.
+| Betik | Ne yapar |
+|---|---|
+| `odom_saglik.py <bag> <çıktı_öneki> [/odom_duz]` | odom/IMU hızı, gecikme, boşluklar, AMCL `map->odom` sıçramaları |
+| `scan_cek.py` + `icp_ardisik.py` | ardışık lidar taramalarını ICP ile eşleyip odom yönü/mesafesini doğrular (dönüş hızına göre) |
+| `icp_karsilastir.py` | durağan anlar arası ICP ile odom karşılaştırması |
+| `zemin_egimi.py <kamera_bag> <sensor_bag>` | kameranın zeminden yüksekliği ve roll/pitch'i (dış kalibrasyon) |
+
+Kullanım örnekleri ve 24.09 / 08.10 sonuçları: `docs/odom_analizi.md`.

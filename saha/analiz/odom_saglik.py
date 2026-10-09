@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+"""Odom/IMU sağlığı: hız, gecikme, boşluklar, odom-IMU yön farkı, AMCL map->odom sıçramaları.
+Kullanım: odom_saglik.py <bag> <çıktı_öneki> [odom_konusu=/odom]  -> <önek>_O.npy, _I.npy, (_M.npy)"""
 import sys, math, numpy as np, rosbag2_py
 from rclpy.serialization import deserialize_message
 from nav_msgs.msg import Odometry
@@ -5,12 +8,13 @@ from tf2_msgs.msg import TFMessage
 from sensor_msgs.msg import Imu
 def yaw(q): return math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))
 b=sys.argv[1]
+ODOM=sys.argv[3] if len(sys.argv)>3 else '/odom'   # ör. /odom_duz
 r=rosbag2_py.SequentialReader(); r.open(rosbag2_py.StorageOptions(uri=b,storage_id='sqlite3'),rosbag2_py.ConverterOptions('',''))
-r.set_filter(rosbag2_py.StorageFilter(topics=['/odom','/tf','/imu']))
+r.set_filter(rosbag2_py.StorageFilter(topics=[ODOM,'/tf','/imu']))
 O=[];M=[];I=[]
 while r.has_next():
     tp,d,t=r.read_next(); t*=1e-9
-    if tp=='/odom':
+    if tp==ODOM:
         m=deserialize_message(d,Odometry); p=m.pose.pose
         O.append((t,m.header.stamp.sec+m.header.stamp.nanosec*1e-9,p.position.x,p.position.y,yaw(p.orientation),m.twist.twist.linear.x,m.twist.twist.angular.z))
     elif tp=='/imu':
