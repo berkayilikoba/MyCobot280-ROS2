@@ -94,7 +94,9 @@ Kamerali kayıt ~27 MB/s (~1.6 GB/dk); robotta ~17 GB boş. `kayit_baslat.sh` 5 
 
 - Kamera görüntüleri kayıtta ~20 Hz: sıkıştırılmış konu ya da DDS soket tamponu (sudo, robot sorumlusu onayı) gerekli.
 - Derinlik renk görüntüsüne hizalı değil (640×400 vs 640×480); `camera_info` + `depth_to_color` kayıtta.
-- Kameranın `base_link`'e göre konumu (dış kalibrasyon) TF'te yok — mezura ile ölçülüp eklenmeli; kare pozu için şart.
+- Kamera dış kalibrasyonu: `config/kamera_kalibrasyon.yaml` (resmi AgileX URDF, `base_link -> camera_link` = (0.084, 0, 0.03) m,
+  eğimsiz; sahada doğrulandı). 09.10 kayıtlarında bu halka TF'te yok, işlerken statik ekleyin; sonraki kayıtlarda
+  `nav_baslat.sh`/`harita_baslat.sh` yayınlıyor.
 - Dönüşlerde 4 teker kaydığı için odom yer değiştirmesinde ~1–8 cm/dönüş hata var (yön hatası ≤1°).
 - AMCL bu odada güvenilir değil (tarama–harita örtüşmesi ~0.5); kare pozları için kayıttan sonra lidar eşleştirmesi önerilir.
 

@@ -65,8 +65,10 @@
         <origin xyz="0.105 0 0.08" rpy="0 0 -0.15"/>
     </xacro:limo_laser>
 
+    <!-- Resmi AgileX URDF (limo_description, limo_ros1): base_link -> derinlik kamerası (0.084, 0, 0.03), eğimsiz;
+         base_link yerden 0.15 m -> kamera ~0.18 m (09.10 sahada doğrulandı: yatay, lidar ile aynı yöne bakıyor). -->
     <xacro:limo_depth_camera parent_prefix="base_link" frame_prefix="camera">
-        <origin xyz="0.105 0 0.1" rpy="0 0 0"/>
+        <origin xyz="0.084 0 0.03" rpy="0 0 0"/>
     </xacro:limo_depth_camera>
 
     <xacro:limo_imu parent_prefix="base_link" frame_prefix="imu">

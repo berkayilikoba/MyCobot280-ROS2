@@ -21,6 +21,7 @@ ssh -o BatchMode=yes "$ROBOT" 'source /opt/ros/foxy/setup.bash; source ~/limo_ro
 sleep 9
 set +u; source /opt/ros/humble/setup.bash; set -u
 export ROS_DOMAIN_ID=77 ROS_LOCALHOST_ONLY=0; unset FASTRTPS_DEFAULT_PROFILES_FILE
+kamera_tf_yayinla "$OTURUM/kamera_tf.log"
 # T-mini tarama başına 654/656/658 nokta veriyor; Karto sabit sayı istiyor -> sabit 656'lık ızgaraya örnekle
 python3 "$SAHA/scan_sabitle.py" 656 > "$OTURUM/scan_sabitle.log" 2>&1 &
 ros2 launch slam_toolbox online_async_launch.py slam_params_file:=$CFG/slam_limo_v3.yaml \

@@ -11,7 +11,7 @@ timeout 30 ros2 run nav2_map_server map_saver_cli -f "$OTURUM/harita" --ros-args
 timeout 15 ros2 service call /slam_toolbox/serialize_map slam_toolbox/srv/SerializePoseGraph "{filename: '$OTURUM/harita_posegraph'}" >/dev/null 2>&1 \
   && echo "poz grafigi kaydedildi"
 # Süreçleri desenle kapat ([x] hilesi: pkill kendi kabuk satırını eşleştirmesin)
-pkill -INT -f "ros2 bag recor[d]"; pkill -INT -f "scan_sabitl[e].py"
+pkill -INT -f "ros2 bag recor[d]"; pkill -INT -f "scan_sabitl[e].py"; pkill -INT -f "child-frame-id camera_lin[k]"
 kapat "online_async_launc[h]" "async_slam_toolbo[x]_node"
 sleep 4
 ssh -o BatchMode=yes "$ROBOT" 'pkill -INT -f "limo_base[.]launch"; pkill -INT -f "open_ydlidar_launc[h]"; pkill -INT -f "odom_duzel[t].py"'

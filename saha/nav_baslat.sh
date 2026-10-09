@@ -16,6 +16,7 @@ ssh -o BatchMode=yes "$ROBOT" 'source /opt/ros/foxy/setup.bash; source ~/limo_ro
 sleep 9
 set +u; source /opt/ros/humble/setup.bash; source "$WS/install/setup.bash"; set -u
 export ROS_DOMAIN_ID=77 ROS_LOCALHOST_ONLY=0; unset FASTRTPS_DEFAULT_PROFILES_FILE
+kamera_tf_yayinla "$OTURUM/kamera_tf.log"
 python3 "$SAHA/scan_sabitle.py" 656 0.22 > "$OTURUM/scan_sabitle.log" 2>&1 &
 ros2 launch limo_bringup limo_nav2.launch.py mode:=diff use_sim_time:=false use_localization:=true \
   params_file:=${NAV_PARAMS:-$CFG/nav2_limo_gercek.yaml} map:=$HARITA > "$OTURUM/nav2.log" 2>&1 &
