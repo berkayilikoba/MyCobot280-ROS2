@@ -102,6 +102,19 @@ koyun, PC'ye aldıktan sonra robottan silin.
 - **09.10 kayıtlarında bu halka yok** — işlerken yaml'daki değerle statik ekleyin (komut yaml'da).
 - Kare pozu: `T_map_optik(t) = T_map_base(t) · T_base_camlink · T_camlink_optik` (son halka sürücünün `/tf_static`'inde).
 
+## 5. Diğer araçlar
+
+| Betik | Ne yapar |
+|---|---|
+| `sim_dikdortgen.sh [dikdortgen.py argümanları]` | dikdörtgen turu gerçek robottan önce simde dener (headless Gazebo + AMCL + Nav2); simde varsayılan sağa dönüş |
+| `drive_yukle.sh <yerel_klasör> <drive_klasör_id> [ad]` | klasörü Google Drive'a yükler (rclone, yalnız kopyalar) ve boyutları doğrular; SQLite geçici dosyalarını atlar |
+| `robot/kamera_sikistir.py [hz] [kalite]` | robotta çalışır: kamerayı JPEG'e sıkıştırıp düşük hızda yayınlar (Wi-Fi üzerinden izlemek için; kayıt için değil) |
+| `kalibrasyon/t1_t2_test.py` | 0.5 m ileri-geri + ±90° yerinde dönüş, öncesi/sonrası tarama ve odom kaydı (`kalibrasyon/analiz.py` ile ICP) |
+| `kalibrasyon/donus_360.py [derece] [rad/s]`, `geri_git.py [m]`, `ileri_geri.py` | basit hareket testleri (haritalama/kalibrasyon) |
+
+**Dikkat:** `kalibrasyon/` betikleri robotu **doğrudan `/cmd_vel` ile** sürer (Nav2 çarpışma monitörü devrede değil);
+yalnızca kendi tarama tabanlı engel durdurmaları var. Robotun başında durun, Nav2 açıkken çalıştırmayın.
+
 ## Bilinen sorunlar / yapılacaklar
 
 - Kamera görüntüleri kayıtta ~20 Hz: sıkıştırılmış konu ya da DDS soket tamponu (sudo, robot sorumlusu onayı) gerekli.
@@ -126,6 +139,8 @@ koyun, PC'ye aldıktan sonra robottan silin.
 | `scan_cek.py` + `icp_ardisik.py` | ardışık lidar taramalarını ICP ile eşleyip odom yönü/mesafesini doğrular (dönüş hızına göre) |
 | `icp_karsilastir.py` | durağan anlar arası ICP ile odom karşılaştırması |
 | `zemin_egimi.py <kamera_bag> <sensor_bag>` | kameranın zeminden yüksekliği ve roll/pitch'i (dış kalibrasyon) |
+| `lidar_kalibrasyon.py <bag> [<bag> ...]` | lidarın base_link'e göre yaw'ı (düz gidiş) ve konumu (yerinde dönüş), %90 aralıkla; statik TF komutunu basar |
+| `amcl_tekrar.sh <çıktı> <params> <domain> <bag> <harita> "<x y yaw>" <ilk_poz_s> <bitiş_s> [hız] [tarama_konusu]` | AMCL'yi kayıt üzerinde farklı ayarlarla tekrar çalıştırır, tarama–harita örtüşmesini ölçer (`amcl_olc.py`, `tf_suz.py` kullanır) |
 | `bag2vlmaps.py <kamera_bag> <sensor_bag> <çıktı>` | kaydı VLMaps sahnesine çevirir: bozulması giderilmiş RGB, renge hizalı metre derinlik (.npy), kare pozları (gövde + kamera), VLMaps ayarı |
 | `vlmaps_dogrula.py <sahne> <sensor_bag>` | sahne doğruluğu: derinlik–renk hizası, zemin yüksekliği, kamera–lidar örtüşmesi, başlangıca dönüş hatası |
 
