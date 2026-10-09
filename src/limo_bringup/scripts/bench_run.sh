@@ -32,7 +32,9 @@ setsid ros2 launch limo_bringup limo_sim_nav2.launch.py "${ARGS[@]}" > "$OUT/lau
 LPID=$!
 PGID=$(ps -o pgid= -p $LPID | tr -d ' ')
 
+BAGPID=
 cleanup() {
+  [ -n "$BAGPID" ] && { kill -INT $BAGPID 2>/dev/null; sleep 2; }
   kill -INT -- -"$PGID" 2>/dev/null
   for _ in $(seq 1 20); do kill -0 -- -"$PGID" 2>/dev/null || break; sleep 0.5; done
   kill -KILL -- -"$PGID" 2>/dev/null
@@ -56,6 +58,11 @@ if [ $ok -ne 1 ]; then
   echo "BRINGUP_FAILED" > "$OUT/status"
   echo "BRINGUP_FAILED (bkz. $OUT/launch.log)" >&2
   exit 4
+fi
+
+if [ -n "${BENCH_BAG:-}" ]; then   # teşhis: seçili konuları kaydet (ör. "/scan /tf /tf_static /odom /cmd_vel")
+  ros2 bag record -o "$OUT/bag" $BENCH_BAG > "$OUT/bag.log" 2>&1 &
+  BAGPID=$!
 fi
 
 timeout --signal=INT --kill-after=10 "${BENCH_WALL_LIMIT:-1800}" python3 "$SCRIPTS/nav_bench.py" --mode "$MODE" --out "$OUT/result.json" \

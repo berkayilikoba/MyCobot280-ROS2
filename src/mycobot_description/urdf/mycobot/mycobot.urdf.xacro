@@ -1,6 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="mycobot_280">
 
+  <!-- kol_kilit:=true -> eklemler fixed. Gazebo'da kolu tutan bir kontrolcü yok; revolute eklemler yalnızca
+       sürtünmeyle duruyor ve robot hareket ettikçe kol çöküp lidar düzlemine giriyordu (24 ileri/dönüş döngüsünde
+       uç z 0.56 -> 0.12 m; Nav2 önünde kalıcı sahte engel gördü). Gerçekte servolar kolu tutar. -->
+  <xacro:arg name="kol_kilit" default="false"/>
+  <xacro:property name="kol_eklem" value="${'fixed' if '$(arg kol_kilit)' == 'true' else 'revolute'}"/>
+
   <!-- Link 1 (Base of the arm) -->
   <link name="joint1">
     <visual>
@@ -23,7 +29,7 @@
   </link>
 
   <!-- Joint 1 to 2 (-168 to +168 deg) -->
-  <joint name="joint2_to_joint1" type="revolute">
+  <joint name="joint2_to_joint1" type="${kol_eklem}">
     <axis xyz="0 0 1"/>
     <limit effort="10.0" lower="-2.9322" upper="2.9322" velocity="1.5"/>
     <dynamics damping="0.5" friction="1.0"/>
@@ -54,7 +60,7 @@
   </link>
 
   <!-- Joint 2 to 3 (-135 to +135 deg) -->
-  <joint name="joint3_to_joint2" type="revolute">
+  <joint name="joint3_to_joint2" type="${kol_eklem}">
     <axis xyz="0 0 1"/>
     <limit effort="10.0" lower="-2.3562" upper="2.3562" velocity="1.5"/>
     <dynamics damping="0.5" friction="1.0"/>
@@ -85,7 +91,7 @@
   </link>
 
   <!-- Joint 3 to 4 (-150 to +150 deg) -->
-  <joint name="joint4_to_joint3" type="revolute">
+  <joint name="joint4_to_joint3" type="${kol_eklem}">
     <axis xyz="0 0 1"/>
     <limit effort="10.0" lower="-2.6180" upper="2.6180" velocity="1.5"/>
     <dynamics damping="0.5" friction="1.0"/>
@@ -116,7 +122,7 @@
   </link>
 
   <!-- Joint 4 to 5 (-145 to +145 deg) -->
-  <joint name="joint5_to_joint4" type="revolute">
+  <joint name="joint5_to_joint4" type="${kol_eklem}">
     <axis xyz="0 0 1"/>
     <limit effort="10.0" lower="-2.5307" upper="2.5307" velocity="1.5"/>
     <dynamics damping="0.5" friction="1.0"/>
@@ -147,7 +153,7 @@
   </link>
 
   <!-- Joint 5 to 6 (-165 to +165 deg) -->
-  <joint name="joint6_to_joint5" type="revolute">
+  <joint name="joint6_to_joint5" type="${kol_eklem}">
     <axis xyz="0 0 1"/>
     <limit effort="10.0" lower="-2.8798" upper="2.8798" velocity="1.5"/>
     <dynamics damping="0.5" friction="1.0"/>
@@ -178,7 +184,7 @@
   </link>
 
   <!-- Joint 6 to 6_flange (-175 to +175 deg) -->
-  <joint name="joint6output_to_joint6" type="revolute">
+  <joint name="joint6output_to_joint6" type="${kol_eklem}">
     <axis xyz="0 0 1"/>
     <limit effort="10.0" lower="-3.0543" upper="3.0543" velocity="1.5"/>
     <dynamics damping="0.5" friction="1.0"/>

@@ -46,10 +46,15 @@ SLAM modunda devriyeye `localizer:=slam_toolbox set_initial_pose:=false` verin.
 
 ## Gerçek robot / Jetson
 
+**Saha betikleri: [`saha/README.md`](saha/README.md)** — haritalama, Nav2 (AMCL), dikdörtgen tur, robot üzerinde
+rosbag kaydı (odom/IMU/lidar + Orbbec kamera). Robottaki Foxy sürücüleri olduğu gibi kullanılır (Docker gerekmez).
+Gerçek robot bulguları: [`docs/odom_analizi.md`](docs/odom_analizi.md) (odom yön ölü bandı ve düzeltmesi),
+[`docs/sensor_modeli.md`](docs/sensor_modeli.md) (gerçek sensör/taban ölçümleri -> simülasyon).
+
 `docker/README.md`: Jetson (Ubuntu 20.04, L4T r35) için Humble imajı, compose profilleri (`limo_base`, `nav`, `slam`,
 `patrol`), udev kuralı. İmaj henüz Jetson'da derlenmedi.
 
 ## Durum
 
 Ayrıntılı bulgular, ölçümler ve açık sorunlar: [`docs/gece_raporu_2026-09-23.md`](docs/gece_raporu_2026-09-23.md).
-Hepsi simülasyonda doğrulandı; gerçek robotta henüz denenmedi. Raporda geçen `bench/...` ölçüm klasörleri depoda değil.
+Rapordaki sonuçlar simülasyonda doğrulandı; 08–09.10'da gerçek robotta Nav2 (MPPI + AMCL) ve dikdörtgen tur çalıştı (`saha/README.md`). Raporda geçen `bench/...` ölçüm klasörleri depoda değil.

@@ -8,7 +8,7 @@ mkdir -p "$OUT"
 set +u; source /opt/ros/humble/setup.bash; source "$WS/install/setup.bash"; set -u
 export ROS_DOMAIN_ID=$DOM ROS_LOCALHOST_ONLY=1 RCUTILS_COLORIZED_OUTPUT=0
 export GAZEBO_MASTER_URI=http://127.0.0.1:$((11345 + DOM))
-ARGS=(mode:=${MODE:-ackermann} headless:=true use_rviz:=false gui:=false world:=/opt/ros/humble/share/gazebo_ros/worlds/empty.world)
+ARGS=(mode:=${MODE:-ackermann} headless:=true use_rviz:=false gui:=false world:=${WORLD:-/opt/ros/humble/share/gazebo_ros/worlds/empty.world})
 [ -n "$URDF" ] && ARGS+=(urdf_model:=$URDF)
 setsid ros2 launch limo_description gazebo_limo_mycobot.launch.py "${ARGS[@]}" > "$OUT/launch.log" 2>&1 &
 LPID=$!; PGID=$(ps -o pgid= -p $LPID | tr -d ' ')

@@ -19,5 +19,6 @@ setup(
     entry_points={'console_scripts': [
         'limo_kinematics = limo_kinematics.cli:main',
         'ackermann_cmd_adapter = limo_kinematics.ackermann_cmd_adapter:main',
+        'taban_modeli = limo_kinematics.taban_modeli_dugumu:main',
     ]},
 )

@@ -104,7 +104,7 @@ class Monitor:
         self.last_traj_t = -1e9
         self.plans = []           # her yeni /plan için (uzunluk_m, cusp sayısı)
         self.plan_paths = []      # ilk 4 planın seyreltilmiş geometrisi [(x, y)]
-        # Yalpalama ölçüsü: hareket hâlinde (vx > 0.2) yaw hızı karesi ve işaret değişimi (±0.05 histerezis)
+        # Yalpalama ölçüsü: hareket hâlinde (vx > 0.05) yaw hızı karesi ve işaret değişimi (±0.05 histerezis)
         self.wz_sq, self.wz_n, self.wz_flips, self.wz_sign, self.move_len = 0.0, 0, 0, 0, 0.0
         self.last_cmd_wz = 0.0
         node.create_subscription(Odometry, '/odom', self._odom, 20)
@@ -144,7 +144,7 @@ class Monitor:
             step = math.hypot(cur[0] - self.pose[0], cur[1] - self.pose[1])
             self.path_len += step
             vx, wz = m.twist.twist.linear.x, m.twist.twist.angular.z
-            if vx > 0.2:
+            if vx > 0.05:   # gerçek robot ayarı en fazla 0.2 m/s; eşik ona göre
                 self.move_len += step
                 self.wz_sq += wz * wz
                 self.wz_n += 1

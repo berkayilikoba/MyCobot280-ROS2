@@ -90,28 +90,30 @@
     
     <gazebo reference="imu_link">
     <gravity>true</gravity>
+    <!-- Gerçek LIMO IMU'su (24.09 ölçümü): ~92 Hz, jiroskop σ 0.00087 rad/s (0.1°/s nicemli; y 0.0016),
+         ivmeölçer σ 0.025 m/s², duruşta yön kayması ~0. Konu gerçekteki gibi /imu. -->
     <sensor name="twr_imu" type="imu">
       <always_on>true</always_on>
-      <update_rate>100</update_rate>
+      <update_rate>90</update_rate>
       <visualize>true</visualize>
       <imu>
         <orientation>
           <x>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>2e-3</stddev>
+              <stddev>1e-4</stddev>
             </noise>
           </x>
           <y>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>2e-3</stddev>
+              <stddev>1e-4</stddev>
             </noise>
           </y>
           <z>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>2e-3</stddev>
+              <stddev>1e-4</stddev>
             </noise>
           </z>
         </orientation>
@@ -119,19 +121,19 @@
           <x>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>2e-4</stddev>
+              <stddev>0.00087</stddev>
             </noise>
           </x>
           <y>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>2e-4</stddev>
+              <stddev>0.0016</stddev>
             </noise>
           </y>
           <z>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>2e-4</stddev>
+              <stddev>0.00087</stddev>
             </noise>
           </z>
         </angular_velocity>
@@ -139,19 +141,19 @@
           <x>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>1.7e-2</stddev>
+              <stddev>0.025</stddev>
             </noise>
           </x>
           <y>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>1.7e-2</stddev>
+              <stddev>0.025</stddev>
             </noise>
           </y>
           <z>
             <noise type="gaussian">
               <mean>0.0</mean>
-              <stddev>1.7e-2</stddev>
+              <stddev>0.025</stddev>
             </noise>
           </z>
         </linear_acceleration>
@@ -160,35 +162,38 @@
         <initial_orientation_as_reference>false</initial_orientation_as_reference>
         <frame_name>imu_link</frame_name>
         <ros>
-          <namespace>/imu</namespace>
-          <remapping>~/out:=data</remapping>
+          <namespace>/</namespace>
+          <remapping>~/out:=imu</remapping>
         </ros>
       </plugin>
     </sensor>
 </gazebo>
 <gazebo reference="laser_link">
+    <!-- Gerçek LIMO'dan ölçüldü (24.09, bag durağan aralıkları, docs/sensor_modeli.md): YDLIDAR T-mini
+     ~6 Hz, ~656 nokta/360°; arkada gövde/kol kapatıyor: etkin görüş -123°..+141°; menzil σ ≈ 4-6 mm (≤4 m),
+     12 mm (4-8 m) -> sabit 7 mm. Gazebo ışın kaybını (%5-10) modellemiyor. -->
     <sensor name="laser" type="ray">
       <always_on>true</always_on>
       <visualize>true</visualize>
-      <update_rate>10</update_rate>
+      <update_rate>6</update_rate>
       <ray>
         <scan>
           <horizontal>
-            <samples>120</samples>
+            <samples>481</samples>
             <resolution>1.000000</resolution>
-            <min_angle>-3.14159</min_angle>
-            <max_angle>3.14159</max_angle>
+            <min_angle>-2.1468</min_angle>
+            <max_angle>2.4609</max_angle>
           </horizontal>
         </scan>
         <range>
-          <min>0.3</min>
-          <max>15.0</max>
+          <min>0.10</min>
+          <max>12.0</max>
           <resolution>0.015</resolution>
         </range>
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.01</stddev>
+          <stddev>0.007</stddev>
         </noise>
       </ray>
       <plugin name="scan" filename="libgazebo_ros_ray_sensor.so">
@@ -249,6 +254,8 @@
              v/w komutunu kendi denetimiyle uyguluyor. Ölçüm 2026-09-23: Nav2 kapalı çevrimde yaw hızı RMS
              0.64 -> 0.31, salınım 3.7 -> 1.8 /m, tur 110 -> 87 s (bench/diffwobble). -->
         <plugin name="planar_move" filename="libgazebo_ros_planar_move.so">
+            <!-- Komut gerçek taban modelinden geçer (limo_kinematics/taban_modeli): /cmd_vel -> cmd_vel_taban -->
+            <ros><remapping>cmd_vel:=cmd_vel_taban</remapping></ros>
             <update_rate>50</update_rate>
             <publish_rate>50</publish_rate>
             <publish_odom>true</publish_odom>
