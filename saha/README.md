@@ -86,9 +86,9 @@ Kayıt (robotta `~/limo_kayit/<ad>_<zaman>/`), iki ayrı bag — sonradan zaman 
 | bag | konular | ölçülen hız (09.10) |
 |---|---|---|
 | `sensor` | `/odom` `/odom_duz` `/imu` `/scan` `/tf` `/tf_static` `/cmd_vel` `/cmd_vel_smoothed` `/amcl_pose` `/limo_status` `/camera/*/camera_info` `/camera/depth_to_color` | odom 49, IMU 96, lidar 6 Hz |
-| `kamera` | `/camera/color/image_raw` (640×480 rgb8) `/camera/depth/image_raw` (640×400 16UC1) | ~20 Hz (kamera 30 Hz yayınlıyor, kayıt ~1/3 düşürüyor) |
+| `kamera` | `/camera/color/image_raw` (640×480 rgb8) `/camera/depth/image_raw` (640×400 16UC1) | renk 27, derinlik 30 Hz (16:28 kaydı; QoS ayarından önce ~20 Hz) |
 
-Kamerali kayıt ~27 MB/s (~1.6 GB/dk); robotta ~17 GB boş. `kayit_baslat.sh` 5 GB altında başlamaz.
+Kamerali kayıt ~41 MB/s (~2.5 GB/dk); robotta ~17 GB boş. `kayit_baslat.sh` 5 GB altında başlamaz.
 Kaydı PC'ye almak: `kayit_bitir.sh --indir` (→ `~/limo_veri/robot_kayit/`). Bag'ler depoya girmez; ortak sürücüye
 koyun, PC'ye aldıktan sonra robottan silin.
 
@@ -117,15 +117,17 @@ yalnızca kendi tarama tabanlı engel durdurmaları var. Robotun başında durun
 
 ## Bilinen sorunlar / yapılacaklar
 
-- Kamera görüntüleri kayıtta ~20 Hz: sıkıştırılmış konu ya da DDS soket tamponu (sudo, robot sorumlusu onayı) gerekli.
+- Kamera kaydı 30 Hz'e çıktı (`config/kamera_qos.yaml`: kayıt kuyruğu 200; önceden ~1/3 kare düşüyordu). Renk kamerası
+  kendisi ~27 Hz yayınlıyor.
 - Kamera açıkken `/odom_duz`'da kısa boşluklar var (09.10: 84 s'de 15 kez >0.2 s, en uzun 0.33 s; kamerasız turda 0).
   Konumu bozmaz (entegrasyon damga aralığıyla), ama yüksek hızda poz ara değerlemesi gerekir.
 - Derinlik renk görüntüsüne hizalı değil (640×400 vs 640×480); `camera_info` + `depth_to_color` kayıtta.
 - Kamera yaw'ı ve derinlik sensörünün yanal ofseti ölçülmedi (derinlik dilimi ↔ lidar eşleştirmesiyle ölçülebilir).
-- **Lidar TF'i yanlış:** robottaki fabrika `open_ydlidar_launch.py` `base_link -> laser_frame` = (0, 0, 0.02), yaw 0
-  yayınlıyor; kayıtlardan ölçülen (yerinde dönüş + düz gidiş ICP) (0.137, 0.015) m, **yaw −9.66°**. AMCL'nin dönüşte
-  sıçraması ve kayması büyük olasılıkla bundan. Düzeltme (yapılacak): `scan_sabitle.py` çıktısını kendi çerçevesine
-  (`laser_duz`) yayınlayıp doğru statik TF vermek, haritayı yeniden çıkarmak.
+- **Lidar TF'i düzeltildi (09.10):** robottaki fabrika `open_ydlidar_launch.py` `base_link -> laser_frame` = (0, 0, 0.02),
+  yaw 0 yayınlıyor; ölçülen (0.137, 0.015) m, **yaw −9.66°** (`analiz/lidar_kalibrasyon.py`). `scan_sabitle.py` taramayı
+  `laser_duz` çerçevesinde yayınlar, `nav_baslat.sh`/`harita_baslat.sh` doğru TF'i verir (`ortam.sh lidar_tf_yayinla`).
+  SLAM/AMCL/costmap/çarpışma monitörü `/scan_sabit` kullanır. Ham `/scan` (laser_frame) hâlâ yanlış TF'li; analizde
+  `laser_duz` değerlerini kullanın. Düzeltme sonrası çıkan harita eksenlere paralel (öncekisi ~10° eğikti).
 - Dönüşlerde 4 teker kaydığı için odom yer değiştirmesinde ~1–8 cm/dönüş hata var (yön hatası ≤1°).
 - AMCL bu odada güvenilir değil (tarama–harita örtüşmesi ~0.5); kare pozları için kayıttan sonra lidar eşleştirmesi önerilir.
 - 09.10'daki ilk kamerali deneme (`~/gunes_kayit/dikdortgen_kamera_*`, tek kayıt süreci) bozuk: lidar 0, odom 35 Hz.

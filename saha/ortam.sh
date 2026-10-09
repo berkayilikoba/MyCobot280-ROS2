@@ -35,3 +35,11 @@ kamera_tf_yayinla() {  # kamera_tf_yayinla <log dosyası>
   ros2 run tf2_ros static_transform_publisher --x 0.084 --y 0 --z 0.028 --roll 0.0075 --pitch -0.0248 --yaw 0 \
     --frame-id base_link --child-frame-id camera_link > "$1" 2>&1 &
 }
+
+# base_link -> laser_duz: lidarın ölçülen dış kalibrasyonu (analiz/lidar_kalibrasyon.py, 09.10 üç tur:
+# yaw -9.66° [IQR -10.1..-9.1], x 0.137 [0.124..0.149], y 0.015 [0.003..0.034] m; dönme merkezine göre).
+# Fabrika laser_frame TF'i (0, 0, 0.02, yaw 0) yanlış; scan_sabitle.py taramayı laser_duz çerçevesinde yayınlar.
+lidar_tf_yayinla() {  # lidar_tf_yayinla <log dosyası>
+  ros2 run tf2_ros static_transform_publisher --x 0.137 --y 0.015 --z 0.02 --roll 0 --pitch 0 --yaw -0.1686 \
+    --frame-id base_link --child-frame-id laser_duz > "$1" 2>&1 &
+}

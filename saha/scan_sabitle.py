@@ -2,7 +2,10 @@
 """/scan -> /scan_sabit: sabit açı ızgarasına yeniden örnekler (N nokta, -pi..pi).
 Neden: slam_toolbox (Karto) her taramada aynı nokta sayısını ister; YDLIDAR T-mini 654/656/658 nokta ve
 değişken açı artışı veriyor -> sayısı ilk taramadan farklı olanlar atılıyor, harita donuyordu (24.09 ölçümü).
-Her hücreye o hücreye düşen en yakın geçerli ölçüm yazılır; boş hücre = inf."""
+Her hücreye o hücreye düşen en yakın geçerli ölçüm yazılır; boş hücre = inf.
+Çıkış çerçevesi (3. argüman, varsayılan laser_duz): robottaki fabrika launch'ı base_link -> laser_frame'i
+(0, 0, 0.02, yaw 0) yanlış yayınlıyor; doğru TF'i ortam.sh lidar_tf_yayinla laser_duz için verir.
+Kullanım: scan_sabitle.py [N=656] [MIN_R=0] [cerceve=laser_duz]"""
 import math
 import sys
 
@@ -14,6 +17,7 @@ N = int(sys.argv[1]) if len(sys.argv) > 1 else 656
 # Bu mesafenin altındaki ölçümler atılır: lidar robotun kendi gövdesini/kolunu 0.04-0.19 m'de görüyor
 # (24.09 ölçümü). Harita için 0 bırakılabilir (SLAM min_laser_range ile zaten süzüyor); Nav2 için 0.22.
 MIN_R = float(sys.argv[2]) if len(sys.argv) > 2 else 0.0
+CERCEVE = sys.argv[3] if len(sys.argv) > 3 else 'laser_duz'
 
 
 def main():
@@ -24,7 +28,8 @@ def main():
 
     def cb(m):
         out = LaserScan()
-        out.header = m.header
+        out.header.stamp = m.header.stamp
+        out.header.frame_id = CERCEVE
         out.angle_min, out.angle_increment = -math.pi, inc
         out.angle_max = -math.pi + inc * (N - 1)
         out.range_min, out.range_max = max(m.range_min, MIN_R), m.range_max

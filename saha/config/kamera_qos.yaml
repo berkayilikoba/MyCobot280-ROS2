@@ -1,0 +1,11 @@
+# ros2 bag record --qos-profile-overrides-path: kamera görüntüleri için derin kuyruk.
+# Varsayılanla kayıt aracı diske yazarken kuyruk taşıyor, karelerin ~1/3'ü düşüyordu (~20 Hz);
+# depth 200 ile 30 Hz'in tamamı kaydedildi (09.10.2026, 6.9 s'de 207/207 kare).
+/camera/color/image_raw:
+  reliability: reliable
+  history: keep_last
+  depth: 200
+/camera/depth/image_raw:
+  reliability: reliable
+  history: keep_last
+  depth: 200
