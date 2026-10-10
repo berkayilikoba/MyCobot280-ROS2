@@ -1,3 +1,5 @@
+
+
 ```markdown
 # MyCobot280-ROS2
 
@@ -85,18 +87,12 @@ ros2 run real_robot real_test
 
 ## 4. Proje Yapısı
 
-```
+```text
 MyCobot280-ROS2/
 ├── mycobot_gazebo/    # Gazebo simülasyonu, launch, rviz ve Python betikleri
 └── real_robot/        # Gerçek donanım kontrol ve test paketleri
 
 ```
-
----
-
-## Lisans
-
-Apache-2.0
 
 ```
 
