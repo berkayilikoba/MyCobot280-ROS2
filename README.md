@@ -1,6 +1,4 @@
 
-
-```markdown
 # MyCobot280-ROS2
 
 Elephant Robotics **myCobot 280** robot kolunu **ROS 2 Humble** ile simülasyon (Gazebo) ve gerçek donanım üzerinde kontrol etmek için hazırlanmış çalışma alanı.
