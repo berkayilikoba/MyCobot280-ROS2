@@ -1,31 +1,31 @@
-
 # MyCobot280-ROS2
 
-Elephant Robotics **myCobot 280** robot kolunu **ROS 2 Humble** ile simülasyon (Gazebo) ve gerçek donanım üzerinde kontrol etmek için hazırlanmış çalışma alanı.
+A workspace prepared to control the Elephant Robotics **myCobot 280** robot arm with **ROS 2 Humble** in simulation (Gazebo) and on real hardware.
 
 ---
 
-## 1. Gereksinimler
+## 1. Requirements
 
-| Bileşen | Sürüm / Açıklama |
-|---|---|
-| İşletim sistemi | Ubuntu 22.04 LTS |
+| Component | Version / Description |
+| --- | --- |
+| Operating System | Ubuntu 22.04 LTS |
 | ROS 2 | Humble Hawksbill |
 | Python | 3.10+ |
 | Robot | myCobot 280 (M5 / Pi) |
 
 ---
 
-## 2. Kurulum ve Derleme
+## 2. Installation and Build
 
-1. Çalışma alanınızın `src` dizinine gidin ve reponuzu klonlayın:
-   ```bash
-   cd ~/colcon_ws/src
-   git clone [https://github.com/berkayilikoba/MyCobot280-ROS2.git](https://github.com/berkayilikoba/MyCobot280-ROS2.git)
+1. Navigate to the `src` directory of your workspace and clone the repository:
+```bash
+cd ~/colcon_ws/src
+git clone https://github.com/berkayilikoba/MyCobot280-ROS2.git
 
 ```
 
-2. Bağımlılıkları yükleyin ve çalışma alanını derleyin:
+
+2. Install dependencies and build the workspace:
 ```bash
 cd ~/colcon_ws
 rosdep install --from-paths src --ignore-src -r -y
@@ -38,25 +38,25 @@ source install/setup.bash
 
 ---
 
-## 3. Çalıştırma Komutları
+## 3. Execution Commands
 
-### A. Gazebo Simülasyonu ve Pick-and-Place
+### A. Gazebo Simulation and Pick-and-Place
 
-1. **Simülasyonu Başlatın:**
+1. **Start the Simulation:**
 ```bash
 ros2 launch mycobot_gazebo gazebo_pick.launch.py
 
 ```
 
 
-2. **RViz Görselleştirmesini Başlatın:**
+2. **Start RViz Visualization:**
 ```bash
 ros2 run rviz2 rviz2 -d $(ros2 pkg prefix mycobot_gazebo)/share/mycobot_gazebo/rviz/pick_place.rviz --ros-args -p use_sim_time:=true
 
 ```
 
 
-3. **Pick and Place Betiğini Çalıştırın:**
+3. **Run the Pick and Place Script:**
 ```bash
 ros2 run mycobot_gazebo cm
 
@@ -64,16 +64,16 @@ ros2 run mycobot_gazebo cm
 
 
 
-### B. Gerçek Robot Testi (`real_robot`)
+### B. Real Robot Test (`real_robot`)
 
-1. Robotu USB ile bağlayıp seri port iznini verin:
+1. Connect the robot via USB and grant serial port permissions:
 ```bash
 sudo chmod 666 /dev/ttyUSB0
 
 ```
 
 
-2. Test düğümünü çalıştırın:
+2. Run the test node:
 ```bash
 ros2 run real_robot real_test
 
@@ -83,15 +83,11 @@ ros2 run real_robot real_test
 
 ---
 
-## 4. Proje Yapısı
+## 4. Project Structure
 
 ```text
 MyCobot280-ROS2/
-├── mycobot_gazebo/    # Gazebo simülasyonu, launch, rviz ve Python betikleri
-└── real_robot/        # Gerçek donanım kontrol ve test paketleri
-
-```
-
-```
+├── mycobot_gazebo/    # Gazebo simulation, launch, rviz, and Python scripts
+└── real_robot/        # Real hardware control and test packages
 
 ```
