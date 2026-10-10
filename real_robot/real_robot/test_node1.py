@@ -1,3 +1,16 @@
+"""
+Bu Python betiği, ROS 2 ve pymycobot kütüphanesini kullanarak gerçek bir 
+MyCobot 280 robot koluyla iletişim kurmak ve temel hareket testleri gerçekleştirmek 
+için tasarlanmıştır.
+
+Yaptığı işlemler sırasıyla:
+1. Belirtilen seri port (/dev/ttyUSB0) üzerinden MyCobot robotuyla seri haberleşme başlatır.
+2. Robotu başlangıç (home) pozisyonuna ([0, 0, 0, 0, 0, 0]) güvenli bir hızda gönderir.
+3. Donanımın ve bağlantının düzgün çalıştığını doğrulamak için bir test açısına hareket ettirir.
+4. Testler tamamlandığında ROS 2 düğümünü (node) düzgün bir şekilde kapatır.
+"""
+
+
 #!/usr/bin/env python3
 import time
 import rclpy
