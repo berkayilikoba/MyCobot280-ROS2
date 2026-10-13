@@ -91,8 +91,11 @@ def main():
             kar[dk > 0] = (0, 0, 255)
             cv2.imwrite(os.path.join(S, f'dogrulama_hiza_{i:06d}.png'), kar)
     hiz = np.array(hiz)
-    rapor.append(f'1) derinlik-renk hizası ({len(hiz)} kare): derinlik kenarının en yakın renk kenarına uzaklığı '
-                 f'medyan {np.median(hiz[:, 0]):.1f} px, <=3 px oranı {np.median(hiz[:, 1]):.2f}')
+    if len(hiz):
+        rapor.append(f'1) derinlik-renk hizası ({len(hiz)} kare): derinlik kenarının en yakın renk kenarına uzaklığı '
+                     f'medyan {np.median(hiz[:, 0]):.1f} px, <=3 px oranı {np.median(hiz[:, 1]):.2f}')
+    else:   # bag2vlmaps --kenar süzgeci süreksizlik piksellerini siler: ölçülecek derinlik kenarı kalmaz
+        rapor.append('1) derinlik-renk hizası: ölçülemedi (yeterli derinlik süreksizliği yok; --kenar süzgeci açık mı?)')
 
     # ---- 2) zemin + derinlik dilimi (dünya) ----
     zem, dilim = [], []

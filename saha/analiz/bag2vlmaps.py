@@ -160,6 +160,19 @@ def derinlik_hizala(dmm, Kd, Kc, T_c_d, boyut, zmin=0.2, zmax=8.0):
     return out
 
 
+def kenar_suz(dmm, oran):
+    """Uçan piksel: 3x3 komşulukta (geçerli komşular) derinlik farkı > oran*z olan pikseli sıfırla."""
+    z = dmm.astype(np.float32)
+    gec = z > 0
+    zb = np.where(gec, z, np.nan)
+    mx = cv2.dilate(np.where(gec, z, 0), np.ones((3, 3), np.uint8))
+    mn = -cv2.dilate(np.where(gec, -z, -1e9).astype(np.float32), np.ones((3, 3), np.uint8))
+    kotu = gec & ((mx - z > oran * z) | (z - mn > oran * z))
+    out = dmm.copy()
+    out[kotu] = 0
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('kamera_bag')
@@ -170,6 +183,12 @@ def main():
     ap.add_argument('--esik_ms', type=float, default=30.0, help='renk-derinlik eşleme eşiği')
     ap.add_argument('--bosluk_s', type=float, default=0.25, help='odom boşluğu bundan uzunsa kareyi atla')
     ap.add_argument('--taban_z', type=float, default=0.15, help='base_link yerden yükseklik (URDF)')
+    ap.add_argument('--zmax', type=float, default=8.0,
+                    help='bundan uzak derinliği at (m). Dabai σ: 1-2 m 4 mm, 2-4 m 28 mm, 4-8 m 89 mm (13.10)')
+    ap.add_argument('--kenar', type=float, default=0.0,
+                    help='uçan piksel süzgeci: 3x3 komşulukta derinlik farkı > kenar*z olan pikselleri at (0=kapalı)')
+    ap.add_argument('--max_w', type=float, default=0.0,
+                    help='gövde açısal hızı bundan büyükse (rad/s) kareyi atla (bulanıklık/eşleme hatası; 0=kapalı)')
     a = ap.parse_args()
 
     kal = yaml.safe_load(open(a.kalib))['base_link_to_camera_link']
@@ -184,16 +203,23 @@ def main():
     Hc, Wc = ci['color'].height, ci['color'].width
 
     # derinlik karelerini damgalarıyla belleğe al (~0.5 MB/kare); renk akışı sırayla işlenir
-    derin = [(damga(m.header), goruntu(m)) for m in
-             (deserialize_message(v, Image) for _, v, _ in okuyucu(a.kamera_bag, ['/camera/depth/image_raw']))]
+    derin, d_cerceve = [], None
+    for _, v, _ in okuyucu(a.kamera_bag, ['/camera/depth/image_raw']):
+        m = deserialize_message(v, Image)
+        d_cerceve = d_cerceve or m.header.frame_id
+        derin.append((damga(m.header), goruntu(m)))
     dT = np.array([d[0] for d in derin])
+    if d_cerceve == 'camera_color_optical_frame':   # sürücüde depth_registration:=true (donanım hizası)
+        T_b_do = T_b_co                                 # derinlik zaten renk çerçevesinde, K = renk K
+        Kd = Kc.copy()
 
     for alt in ('rgb', 'depth'):
         os.makedirs(os.path.join(a.cikti, alt), exist_ok=True)
     f_poz = open(os.path.join(a.cikti, 'poses.txt'), 'w')
     f_kam = open(os.path.join(a.cikti, 'poses_kamera.txt'), 'w')
     f_zam = open(os.path.join(a.cikti, 'zaman.txt'), 'w')
-    say = {'renk': 0, 'yazilan': 0, 'derinlik_yok': 0, 'odom_boslugu': 0}
+    say = {'renk': 0, 'yazilan': 0, 'derinlik_yok': 0, 'odom_boslugu': 0, 'hizli_donus': 0}
+    w_odom = np.gradient(O[:, 3], O[:, 0])
     n = 0
     for _, veri, _ in okuyucu(a.kamera_bag, ['/camera/color/image_raw']):
         say['renk'] += 1
@@ -210,10 +236,16 @@ def main():
         if Tw_bc is None or Tw_bd is None:
             say['odom_boslugu'] += 1
             continue
+        if a.max_w > 0 and abs(np.interp(tc, O[:, 0], w_odom)) > a.max_w:
+            say['hizli_donus'] += 1
+            continue
         Tw_co = Tw_bc @ T_b_co
         T_c_d = np.linalg.inv(Tw_co) @ Tw_bd @ T_b_do        # derinlik optik (td) -> renk optik (tc)
         rgb = cv2.undistort(goruntu(m), Kc, Dc)               # ROS rational_polynomial sırası = OpenCV
-        dep = derinlik_hizala(derin[j][1], Kd, Kc, T_c_d, (Hc, Wc))
+        dmm = derin[j][1]
+        if a.kenar > 0:
+            dmm = kenar_suz(dmm, a.kenar)
+        dep = derinlik_hizala(dmm, Kd, Kc, T_c_d, (Hc, Wc), zmax=a.zmax)
         cv2.imwrite(os.path.join(a.cikti, 'rgb', f'{n:06d}.png'), rgb)
         np.save(os.path.join(a.cikti, 'depth', f'{n:06d}.npy'), dep)
         for f, M in ((f_poz, Tw_bc), (f_kam, Tw_co)):
@@ -240,14 +272,14 @@ def main():
         yaml.safe_dump(cfg, f, sort_keys=False, default_flow_style=None)
     bilgi = {'kaynak': {'kamera_bag': os.path.abspath(a.kamera_bag), 'sensor_bag': os.path.abspath(a.sensor_bag)},
              'dunya_cercevesi': 'odom (robot açılışındaki konum), z yukarı, z=0 zemin; poses.txt = base_footprint', 'poz_kaynagi': '/odom_duz',
-             'sayilar': say, 'kalibrasyon': kal,
+             'sayilar': say, 'suzgecler': {'zmax_m': a.zmax, 'kenar_oran': a.kenar, 'max_w_rad_s': a.max_w, 'her': a.her}, 'kalibrasyon': kal,
              'T_base_renkoptik': [[round(float(v), 6) for v in r] for r in T_b_co],
              'renk_K': Kc.ravel().round(4).tolist(), 'renk_bozulma_giderildi': Dc.round(5).tolist(),
              'derinlik_K': Kd.ravel().round(4).tolist()}
     with open(os.path.join(a.cikti, 'bilgi.yaml'), 'w') as f:
         yaml.safe_dump(bilgi, f, sort_keys=False, allow_unicode=True, default_flow_style=None)
     print(f'yazılan kare {n} / renk {say["renk"]} (derinlik eşi yok {say["derinlik_yok"]}, '
-          f'odom boşluğu {say["odom_boslugu"]}) -> {a.cikti}')
+          f'odom boşluğu {say["odom_boslugu"]}, hızlı dönüş {say["hizli_donus"]}) -> {a.cikti}')
 
 
 if __name__ == '__main__':
