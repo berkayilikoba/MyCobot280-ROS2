@@ -13,9 +13,9 @@ ssh -o BatchMode=yes "$ROBOT" 'pgrep -f "ros2 bag recor[d]" >/dev/null' && { ech
 BOS=$(ssh -o BatchMode=yes "$ROBOT" "df -BG --output=avail / | tail -1 | tr -dc 0-9")
 echo "robot diskinde bos: ${BOS} GB"; [ "$BOS" -lt 5 ] && { echo "HATA: 5 GB'tan az yer var"; exit 4; }
 SENSOR="/odom /odom_duz /imu /scan /scan_sabit /tf /tf_static /cmd_vel /cmd_vel_smoothed /amcl_pose /limo_status /camera/color/camera_info /camera/depth/camera_info /camera/depth_to_color"
-scp -q -o BatchMode=yes "$CFG/kamera_qos.yaml" "$CFG/sensor_qos.yaml" "$ROBOT:/tmp/" || exit 1
+scp -q -o BatchMode=yes "$CFG/kamera_qos.yaml" "$CFG/sensor_qos.yaml" "$CFG/fastdds_udp.xml" "$ROBOT:/tmp/" || exit 1
 robot_cmd "mkdir -p $DIZIN
-  (timeout -s INT $SURE ros2 bag record -o $DIZIN/sensor --qos-profile-overrides-path /tmp/sensor_qos.yaml $SENSOR > $DIZIN/sensor.log 2>&1 &)
+  (FASTRTPS_DEFAULT_PROFILES_FILE=/tmp/fastdds_udp.xml timeout -s INT $SURE ros2 bag record -o $DIZIN/sensor --qos-profile-overrides-path /tmp/sensor_qos.yaml $SENSOR > $DIZIN/sensor.log 2>&1 &)
   if [ $KAMERA = 1 ]; then (timeout -s INT $SURE ros2 bag record -o $DIZIN/kamera --qos-profile-overrides-path /tmp/kamera_qos.yaml /camera/color/image_raw /camera/depth/image_raw > $DIZIN/kamera.log 2>&1 &); fi
   sleep 5; grep -h -m1 'All requested topics' $DIZIN/*.log | cut -c1-90"
 echo "$DIZIN" > "$VERI/aktif_kayit"
